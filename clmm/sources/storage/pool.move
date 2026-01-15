@@ -78,6 +78,8 @@ public struct PoolRewardCustodianDfKey<phantom X> has copy, drop, store {
 
 public struct MinTickRangeDfKey has copy, drop, store {}
 
+public struct VeEnabledDfKey has copy, drop, store {}
+
 // events
 public struct ObservationCardinalityUpdatedEvent has copy, drop, store {
     sender: address,
@@ -112,6 +114,11 @@ public struct SetMinTickRangeFactorEvent has copy, drop, store {
 public struct ToggleTradingEvent has copy, drop, store {
     pool_id: ID,
     toggle_trading: bool,
+}
+
+public struct VeStateChangedEvent has copy, drop, store {
+    pool_id: ID,
+    ve_enabled: bool,
 }
 
 // ----- Public Functions -----
@@ -214,6 +221,16 @@ public fun min_tick_range_factor<X, Y>(pool: &Pool<X, Y>): u32 {
         *val
     } else {
         mmt_v3::constants::default_min_tick_range_factor()
+    }
+}
+
+public fun is_ve_enabled<X, Y>(pool: &Pool<X, Y>): bool {
+    let key = VeEnabledDfKey {};
+    if (dynamic_field::exists_<VeEnabledDfKey>(&pool.id, key)) {
+        let val = dynamic_field::borrow<VeEnabledDfKey, bool>(&pool.id, key);
+        *val
+    } else {
+        false
     }
 }
 
@@ -447,7 +464,7 @@ public(package) fun add_liquidity<X, Y>(
 
     // [2] add assets to treasury
     assert!(
-        balance::value(&balance_x) >= delta_x && 
+        balance::value(&balance_x) >= delta_x &&
             balance::value(&balance_y) >= delta_y,
         error::insufficient_funds(),
     );
@@ -742,6 +759,28 @@ public(package) fun set_flash_loan_fee_rate<X, Y>(pool: &mut Pool<X, Y>, val: u6
     pool.flash_loan_fee_rate = val;
 }
 
+public(package) fun set_ve_enabled_state<X, Y>(pool: &mut Pool<X, Y>, val: bool) {
+    let key = VeEnabledDfKey {};
+    assert!(is_ve_enabled(pool) != val, error::ve_state_not_changed());
+
+    if (df::exists_<VeEnabledDfKey>(&pool.id, key)){
+        let mut enabled = df::borrow_mut<VeEnabledDfKey, bool>(&mut pool.id, key);
+        *enabled = val;
+    }else {
+        df::add(&mut pool.id, key, val);
+    };
+
+    if (val) {
+        pool.protocol_fee_share = constants::protocol_fee_share_denominator();
+    } else {
+        pool.protocol_fee_share = constants::protocol_swap_fee_share();
+    };
+    event::emit<VeStateChangedEvent>(VeStateChangedEvent {
+        pool_id: pool.pool_id(),
+        ve_enabled: val,
+    });
+}
+
 public(package) fun default_reward_info(
     reward_coin_type: TypeName,
     last_update_time: u64,
@@ -828,7 +867,7 @@ public(package) fun update_pool_reward_emission<X, Y, R>(
     additional_balance: Balance<R>,
     additional_seconds: u64,
     tx_context: &TxContext,
-) {
+): (u64, u64) {
     let pool_id = object::id<Pool<X, Y>>(pool);
     let reward_index = find_reward_info_index<X, Y, R>(pool);
     let reward_info = vector::borrow_mut<PoolRewardInfo>(&mut pool.reward_infos, reward_index);
@@ -863,6 +902,8 @@ public(package) fun update_pool_reward_emission<X, Y, R>(
     };
 
     event::emit<UpdatePoolRewardEmissionEvent>(update_event);
+
+    (new_end_time - additional_seconds, new_end_time)
 }
 
 fun find_reward_info_index<X, Y, R>(pool: &Pool<X, Y>): u64 {

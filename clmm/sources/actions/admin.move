@@ -64,12 +64,31 @@ public fun initialize_pool_reward<X, Y, R>(
 
     assert!(app::get_rewarder_admin(acl) == tx_context::sender(ctx), error::not_authorised());
 
+    initialize_pool_reward_<X, Y, R>(
+        pool,
+        start_time,
+        additional_seconds,
+        initial_balance,
+        clock,
+        ctx,
+    );
+}
+
+public(package) fun initialize_pool_reward_<X, Y, R>(
+    pool: &mut Pool<X, Y>,
+    start_time: u64,
+    additional_seconds: u64,
+    initial_balance: Balance<R>,
+    clock: &Clock,
+    ctx: &TxContext,
+): (u64, u64) {
     assert!(start_time > utils::to_seconds(clock::timestamp_ms(clock)), error::invalid_timestamp());
 
     let reward_coin_type = type_name::get<R>();
     let pool_reward_info = pool::default_reward_info(reward_coin_type, start_time);
     pool::add_reward_info<X, Y, R>(pool, pool_reward_info, ctx);
-    pool::update_pool_reward_emission<X, Y, R>(pool, initial_balance, additional_seconds, ctx);
+
+    pool::update_pool_reward_emission<X, Y, R>(pool, initial_balance, additional_seconds, ctx)
 }
 
 public fun collect_protocol_fee<X, Y>(
@@ -82,8 +101,19 @@ public fun collect_protocol_fee<X, Y>(
 ): (Balance<X>, Balance<Y>) {
     version::assert_supported_version(version);
     pool::assert_not_pause(pool);
+    assert!(!pool::is_ve_enabled(pool), error::forbidden_after_ve());
 
     assert!(app::get_pool_admin(acl) == tx_context::sender(ctx), error::not_authorised());
+
+    collect_protocol_fees_(pool, amount_x, amount_y, ctx)
+}
+
+public(package) fun collect_protocol_fees_<X, Y>(
+    pool: &mut Pool<X, Y>,
+    amount_x: u64,
+    amount_y: u64,
+    ctx: &TxContext,
+): (Balance<X>, Balance<Y>) {
     let min_amount_x = math::min(amount_x, pool::protocol_fee_x(pool));
     let min_amount_y = math::min(amount_y, pool::protocol_fee_y(pool));
     let protocol_fee_x = pool::protocol_fee_x(pool);
@@ -140,11 +170,21 @@ public fun update_pool_reward_emission<X, Y, R>(
 
     assert!(app::get_rewarder_admin(acl) == tx_context::sender(ctx), error::not_authorised());
 
+    update_pool_reward_emission_(pool, additional_balance, additional_seconds, clock, ctx);
+}
+
+public(package) fun update_pool_reward_emission_<X, Y, R>(
+    pool: &mut Pool<X, Y>,
+    additional_balance: Balance<R>,
+    additional_seconds: u64,
+    clock: &Clock,
+    ctx: &TxContext,
+): (u64, u64) {
     pool::update_reward_infos<X, Y>(
         pool,
         utils::to_seconds(clock::timestamp_ms(clock)),
     );
-    pool::update_pool_reward_emission<X, Y, R>(pool, additional_balance, additional_seconds, ctx);
+    pool::update_pool_reward_emission<X, Y, R>(pool, additional_balance, additional_seconds, ctx)
 }
 
 // fee operations

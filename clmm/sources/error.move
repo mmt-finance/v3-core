@@ -91,3 +91,11 @@ public fun invalid_major_version(): u64 { 79 }
 public fun invalid_sqrt_prices(): u64 { 80 }
 
 public fun invalid_pool_coin_types_sorted(): u64 { 81 }
+
+public fun ve_cap_already_issued(): u64 { 82 }
+
+public fun deprecated_reward_claim(): u64 { 83 }
+
+public fun ve_state_not_changed(): u64 { 84 }
+
+public fun forbidden_after_ve(): u64 { 85 }

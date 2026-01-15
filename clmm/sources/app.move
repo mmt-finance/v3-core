@@ -2,7 +2,12 @@ module mmt_v3::app;
 
 use mmt_v3::constants;
 use sui::dynamic_field as df;
+use mmt_v3::error;
 use sui::event;
+
+public struct VeCap has key, store {
+    id: UID,
+}
 
 public struct AdminCap has key, store {
     id: UID,
@@ -11,6 +16,8 @@ public struct AdminCap has key, store {
 public struct Acl has key {
     id: UID,
 }
+
+public struct VeCapIssuedKey() has store, copy, drop;
 
 public struct SetPoolAdminEvent has copy, drop, store {
     sender: address,
@@ -63,6 +70,31 @@ public fun get_pool_admin(acl: &Acl): address {
     *df::borrow<u64, address>(&acl.id, constants::pool_admin_df_key())
 }
 
+public fun issue_ve_cap(_: &AdminCap, acl: &mut Acl, ctx: &mut TxContext): VeCap {
+    assert!(!is_ve_cap_issued(acl), error::ve_cap_already_issued());
+    set_reward_cap_issued(acl);
+
+    VeCap {id: object::new(ctx)}
+}
+
+public(package) fun is_ve_cap_issued(acl: &Acl): bool {
+    df::exists_(&acl.id, VeCapIssuedKey())
+}
+
+fun set_reward_cap_issued(acl: &mut Acl) {
+    df::add<VeCapIssuedKey, bool>(&mut acl.id, VeCapIssuedKey(), true);
+}
+
+#[test_only]
+public fun issue_ve_cap_for_testing(ctx: &mut TxContext): VeCap {
+    let mut acl = create_acl_for_testing(ctx);
+    let admin_cap = create_for_testing(ctx);
+    let ve_cap = issue_ve_cap(&admin_cap, &mut acl, ctx);
+    destroy_for_testing(admin_cap);
+    destroy_acl_for_testing(acl);
+    ve_cap
+}
+
 #[test_only]
 public fun create_for_testing(ctx: &mut TxContext): AdminCap {
     AdminCap {
@@ -74,6 +106,12 @@ public fun create_for_testing(ctx: &mut TxContext): AdminCap {
 public fun destroy_for_testing(admin_cap: AdminCap) {
     let AdminCap { id } = admin_cap;
     object::delete(id);
+}
+
+#[test_only]
+public fun destroy_ve_cap_for_testing(ve_cap: VeCap) {
+    let VeCap { id } = ve_cap;
+    id.delete();
 }
 
 #[test_only]
