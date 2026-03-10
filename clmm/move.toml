@@ -2,7 +2,7 @@
 name = "mmt_v3"
 version = "1.0.0"
 edition = "2024.beta"
-published-at = "0x7a3d0bb10c7c81c89ca51a552ec5644440d2b07d8ab70a678f2bad8b123ee94e"
+published-at = "0xcf548a43151dafca6ed4b7bcbb17698eac0bf5c761d9458c53719a8a004dda02"
 
 [addresses]
-mmt_v3 = "0x7a3d0bb10c7c81c89ca51a552ec5644440d2b07d8ab70a678f2bad8b123ee94e"
+mmt_v3 = "0xcf548a43151dafca6ed4b7bcbb17698eac0bf5c761d9458c53719a8a004dda02"
