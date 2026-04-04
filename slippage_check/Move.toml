@@ -1,12 +1,10 @@
 [package]
 name = "slippage_check"
 edition = "2024.beta"
-published-at = "0xbccbca34f4e275c58c606efb89d18ef7dcfec431054fced3abc85d207a8bdbb0"
+published-at = "0x53b22c90740ab62b11c22d6263ad092cc7bdf84f308d2c05631da0a0ba5d54be"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet" }
-MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", rev = "mainnet", subdir = "crates/sui-framework/packages/move-stdlib" }
 mmt_v3 = { local = "../clmm" }
 
 [addresses]
-slippage_check = "0xbccbca34f4e275c58c606efb89d18ef7dcfec431054fced3abc85d207a8bdbb0"
+slippage_check = "0x53b22c90740ab62b11c22d6263ad092cc7bdf84f308d2c05631da0a0ba5d54be"
