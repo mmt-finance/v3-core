@@ -1,10 +1,10 @@
 [package]
 name = "slippage_check"
 edition = "2024.beta"
-published-at = "0x53b22c90740ab62b11c22d6263ad092cc7bdf84f308d2c05631da0a0ba5d54be"
+published-at = "0x1ab37893c7ead5b0e07306aeb14fdb643123585311fdc55ab4f73d5d5b58edaf"
 
 [dependencies]
 mmt_v3 = { local = "../clmm" }
 
 [addresses]
-slippage_check = "0x53b22c90740ab62b11c22d6263ad092cc7bdf84f308d2c05631da0a0ba5d54be"
+slippage_check = "0x1ab37893c7ead5b0e07306aeb14fdb643123585311fdc55ab4f73d5d5b58edaf"
