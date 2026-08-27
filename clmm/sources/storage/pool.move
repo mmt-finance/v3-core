@@ -234,6 +234,14 @@ public fun is_ve_enabled<X, Y>(pool: &Pool<X, Y>): bool {
     }
 }
 
+public fun is_paused<X, Y>(pool: &Pool<X, Y>): bool {
+    if (df::exists_(&pool.id, constants::is_pause_df_key())) {
+        *df::borrow<vector<u8>, bool>(&pool.id, constants::is_pause_df_key())
+    } else {
+        false
+    }
+}
+
 // oracle public functions
 public fun observe<X, Y>(
     pool: &Pool<X, Y>,
@@ -391,13 +399,7 @@ public fun pause<X, Y>(acl: &Acl, pool: &mut Pool<X, Y>, val: bool, ctx: &TxCont
 }
 
 public(package) fun assert_not_pause<X, Y>(pool: &Pool<X, Y>) {
-    let paused = if (df::exists_(&pool.id, constants::is_pause_df_key())) {
-        *df::borrow<vector<u8>, bool>(&pool.id, constants::is_pause_df_key())
-    } else {
-        false
-    };
-
-    assert!(!paused, error::pool_is_pause());
+    assert!(!is_paused(pool), error::pool_is_pause());
 }
 
 public fun set_min_tick_range_factor<X, Y>(
