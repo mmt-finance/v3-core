@@ -9,7 +9,6 @@ use sui::clock::Clock;
 
 public fun set_pool_ve_enabled_state<X, Y>(pool: &mut Pool<X, Y>, is_enabled: bool, version: &Version, _: &VeCap) {
     version::assert_supported_version(version);
-    pool::assert_not_pause(pool);
 
     pool::set_ve_enabled_state(pool, is_enabled);
 }
